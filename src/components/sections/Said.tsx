@@ -1,30 +1,28 @@
-import { Reveal } from "@/components/Reveal";
+import { words } from "@/lib/site";
 
-/** How couples and guests describe him, set as a wall of words. */
-const words = [
-  "Fun", "Friendly", "Relaxed", "Creative", "Thoughtful",
-  "Full of ideas", "Organised", "Never stops", "Like one of the guests",
-];
-
+/**
+ * A banner of the words couples and guests use about him, running edge to
+ * edge between the two strips. The list is doubled so the loop closes on
+ * itself with no visible seam.
+ */
 export default function Said() {
+  const run = [...words, ...words];
   return (
-    <section className="u-wrap py-20 lg:py-28">
-      <Reveal as="p" mode="fade" className="u-label text-mute">
-        What people say
-      </Reveal>
-      <ul className="mt-7 flex flex-wrap items-baseline gap-x-7 gap-y-2.5">
-        {words.map((w, i) => (
-          <Reveal
-            key={w}
-            as="li"
-            mode="rise"
-            delay={i * 70}
-            className="u-display text-[2rem] leading-tight sm:text-5xl lg:text-6xl"
-          >
-            {w}
-          </Reveal>
+    <section className="u-marquee bg-ink text-wall py-7 lg:py-9" aria-label="What people say">
+      <div className="u-marquee-track">
+        {[0, 1].map((copy) => (
+          <div key={copy} className="flex shrink-0 items-center">
+            {run.map((w, i) => (
+              <span key={`${copy}-${i}`} className="flex items-center">
+                <span className="u-display px-7 text-4xl whitespace-nowrap sm:text-5xl lg:text-6xl">
+                  {w}
+                </span>
+                <span className="bg-wall/40 h-1.5 w-1.5 shrink-0 rounded-full" />
+              </span>
+            ))}
+          </div>
         ))}
-      </ul>
+      </div>
     </section>
   );
 }

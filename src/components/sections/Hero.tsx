@@ -8,8 +8,8 @@ export default function Hero() {
     <section className="relative isolate flex min-h-[94svh] flex-col justify-end overflow-hidden">
       <div className="absolute inset-0 -z-10">
         <Image
-          src="/img/hero-a.jpg"
-          alt="A wedding ceremony in a garden pavilion at dusk"
+          src="/img/hero.jpg"
+          alt="A bride and groom photographed from above on a spiral staircase"
           fill
           priority
           sizes="100vw"

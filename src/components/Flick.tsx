@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef } from "react";
 
 export type Frame = {
   slug: string;
@@ -12,15 +12,22 @@ export type Frame = {
   meta?: string;
 };
 
+/* Width of a frame at rest, and once it has been pushed aside, in vw. */
+const FULL = 40;
+const SLIVER = 2.2;
+/* How many frames stay open at the end rather than collapsing. */
+const KEEP = 1.7;
+
 /**
- * The filmstrip. A tall outer section holds a sticky stage, and the strip
- * inside is pushed sideways as that section scrolls past, so the frames
- * flick by one after another.
+ * The filmstrip. Frames do not slide past the edge: as the page scrolls
+ * each one narrows to a sliver and piles up against the left, so the ones
+ * already seen stay on screen as a stack of edges while the next opens.
  *
- * The transform is written to the node from a rAF loop rather than held in
- * state: at sixty frames a second React would re-render the whole strip,
- * and the scroll would stutter on exactly the hardware least able to hide
- * it. The loop only runs while the section is on screen.
+ * Nothing translates. The whole effect is the frames' own widths, which
+ * means the stack pins itself to the left without any compensating offset.
+ * Those widths are written to the nodes from a rAF loop rather than held
+ * in state: at sixty frames a second React would re-render the strip and
+ * the scroll would stutter.
  */
 export default function Flick({
   id,
@@ -49,43 +56,46 @@ export default function Flick({
     const coarse = window.matchMedia("(hover: none)").matches;
     if (reduced || coarse) return;
 
-    let frame = 0;
+    const items = Array.from(strip.children) as HTMLElement[];
+    let raf = 0;
     let visible = false;
     const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting), {
-      rootMargin: "100px",
+      rootMargin: "120px",
     });
     io.observe(section);
 
     const tick = () => {
       if (visible) {
-        const travel = strip.scrollWidth - window.innerWidth;
         const span = section.offsetHeight - window.innerHeight;
         const past = -section.getBoundingClientRect().top;
         const p = span > 0 ? Math.min(1, Math.max(0, past / span)) : 0;
-        strip.style.transform = `translate3d(${-(travel * p).toFixed(2)}px,0,0)`;
 
-        // Mark whichever frames are actually in front of the reader, so the
-        // rest can sit back without being hidden outright.
-        const mid = window.innerWidth / 2;
-        for (const el of strip.children) {
-          const r = (el as HTMLElement).getBoundingClientRect();
-          const near = r.left < mid + r.width && r.right > mid - r.width;
-          if (near) (el as HTMLElement).setAttribute("data-near", "");
-          else (el as HTMLElement).removeAttribute("data-near");
+        // How far through the stack we are, counted in frames.
+        const shut = p * Math.max(1, items.length - KEEP);
+
+        for (let i = 0; i < items.length; i++) {
+          const el = items[i];
+          // 0 while open, 1 once fully folded away.
+          const t = Math.min(1, Math.max(0, shut - i));
+          const eased = t * t * (3 - 2 * t);
+          el.style.width = `${(FULL + (SLIVER - FULL) * eased).toFixed(3)}vw`;
+          el.style.setProperty("--shut", eased.toFixed(3));
+          if (eased > 0.6) el.setAttribute("data-shut", "");
+          else el.removeAttribute("data-shut");
         }
       }
-      frame = requestAnimationFrame(tick);
+      raf = requestAnimationFrame(tick);
     };
-    frame = requestAnimationFrame(tick);
+    raf = requestAnimationFrame(tick);
 
     return () => {
-      cancelAnimationFrame(frame);
+      cancelAnimationFrame(raf);
       io.disconnect();
     };
   }, []);
 
   // Tall enough that each frame gets roughly three quarters of a screen.
-  const height = `calc(100svh + ${Math.max(1, frames.length) * 62}vh)`;
+  const height = `calc(100svh + ${Math.max(1, frames.length) * 72}vh)`;
 
   return (
     <section ref={outer} id={id} className="u-flick" style={{ height }}>
@@ -97,35 +107,36 @@ export default function Flick({
 
         <div ref={track} className="u-flick-track">
           {frames.map((f, i) => (
-            <figure key={f.slug} className="u-frame" data-near={i < 2 ? "" : undefined}>
+            <figure key={f.slug} className="u-frame">
               <Link href={`${base}/${f.slug}`} className="group block">
                 <div className="bg-wall-2 relative aspect-[4/3] overflow-hidden">
                   <Image
                     src={f.img}
                     alt={f.title}
                     fill
-                    sizes="(max-width: 640px) 80vw, 42vw"
+                    sizes="(max-width: 640px) 80vw, 40vw"
                     className="object-cover transition-transform duration-[1.6s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
                     priority={i < 2}
                   />
                 </div>
-                <figcaption className="mt-3.5 flex items-baseline justify-between gap-4">
-                  <span className="text-[1.0625rem] tracking-[-0.01em]">{f.title}</span>
-                  <span className="u-label text-mute shrink-0">
-                    {String(i + 1).padStart(2, "0")}
+                <figcaption className="u-frame-cap mt-3.5">
+                  <span className="flex items-baseline justify-between gap-4">
+                    <span className="text-[1.0625rem] tracking-[-0.01em] whitespace-nowrap">
+                      {f.title}
+                    </span>
+                    <span className="u-label text-mute shrink-0">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
                   </span>
+                  {(f.meta || f.note) && (
+                    <span className="text-mute mt-1 block text-sm whitespace-nowrap">
+                      {f.meta || f.note}
+                    </span>
+                  )}
                 </figcaption>
-                {(f.meta || f.note) && (
-                  <p className="text-mute mt-1 text-sm">{f.meta || f.note}</p>
-                )}
               </Link>
             </figure>
           ))}
-          <div className="w-[var(--gutter)] shrink-0" aria-hidden />
-        </div>
-
-        <div className="u-wrap text-mute shrink-0 pt-7 text-sm" style={{ "--d": "0ms" } as CSSProperties}>
-          Scroll to move through them. Any frame opens the full set.
         </div>
       </div>
     </section>

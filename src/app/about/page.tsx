@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Reveal, Rule, Words } from "@/components/Reveal";
-import { about, booth, site } from "@/lib/site";
+import { about, approach, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: `About ${site.name} | ${site.full}`,
@@ -31,6 +31,28 @@ export default function About() {
           {about.standfirst}
         </Reveal>
         <Rule delay={420} className="mt-12" />
+      </section>
+
+      <section className="u-wrap pb-20">
+        <Reveal as="h2" mode="rise" className="u-label text-mute">
+          {approach.heading}
+        </Reveal>
+        <Reveal
+          as="p"
+          mode="rise"
+          delay={80}
+          className="u-display mt-6 max-w-4xl text-[1.9rem] leading-[1.15] sm:text-4xl lg:text-5xl"
+        >
+          {approach.lead}
+        </Reveal>
+        <div className="mt-12 grid gap-x-12 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
+          {approach.points.map((pt, i) => (
+            <Reveal key={pt.h} mode="rise" delay={120 + i * 70}>
+              <h3 className="text-[1.0625rem] tracking-[-0.01em]">{pt.h}</h3>
+              <p className="text-mute mt-2.5 text-[0.95rem] leading-relaxed">{pt.p}</p>
+            </Reveal>
+          ))}
+        </div>
       </section>
 
       <section className="u-wrap grid gap-12 pb-20 lg:grid-cols-[1fr_0.8fr] lg:gap-20">
@@ -91,13 +113,11 @@ export default function About() {
           </Reveal>
 
           <Reveal mode="rise" delay={140}>
-            <h2 className="u-label text-mute">The photo booth</h2>
-            <p className="u-display mt-5 text-5xl">from {booth.from}</p>
-            <p className="text-ink-2 mt-4 max-w-sm leading-relaxed">{booth.detail}</p>
-            <p className="mt-8">
-              <a href={site.phoneHref} className="u-label u-link">
-                {site.phone}
-              </a>
+            <h2 className="u-label text-mute">Get in touch</h2>
+            <p className="u-display mt-5 text-4xl sm:text-5xl">{site.phone}</p>
+            <p className="text-ink-2 mt-4 max-w-sm leading-relaxed">
+              Based in {site.base}, covering {site.covers}, and further by
+              arrangement.
             </p>
             <p className="mt-10">
               <Link href="/" className="u-label u-link text-mute">

@@ -72,9 +72,9 @@ body {
 
 /* ---------------------------------------------------------------------
  * The flick-through. A tall section holds a sticky viewport, and the
- * filmstrip inside it is pushed sideways as the page scrolls past, so one
- * frame gives way to the next. Written straight to the element from a rAF
- * loop; React never sees a frame of it.
+ * frames inside narrow as the page scrolls so that the ones already seen
+ * pile up against the left as a stack of edges. Written straight to the
+ * elements from a rAF loop; React never sees a frame of it.
  * ------------------------------------------------------------------ */
 .u-flick { position: relative; }
 .u-flick-stage {
@@ -88,22 +88,29 @@ body {
 }
 .u-flick-track {
   display: flex;
-  align-items: center;
-  gap: clamp(1rem, 2.5vw, 2.25rem);
-  will-change: transform;
+  align-items: flex-start;
+  gap: 6px;
   padding-inline: var(--gutter);
 }
 .u-frame {
+  --shut: 0;
   position: relative;
   flex: none;
-  width: clamp(16rem, 42vw, 34rem);
-  transition:
-    opacity 0.7s var(--ease-long),
-    filter 0.7s var(--ease-long);
-  opacity: 0.38;
-  filter: saturate(0.25);
+  width: 40vw;
+  will-change: width;
 }
-.u-frame[data-near] { opacity: 1; filter: none; }
+/* The picture keeps its shape while the frame narrows, so a folded frame
+   reads as the edge of a photograph rather than a squashed one. */
+.u-frame > a > div { height: 54vh; }
+.u-frame img { object-position: center; }
+
+/* Captions belong to whichever frame is still open. */
+.u-frame-cap {
+  opacity: calc(1 - var(--shut) * 1.6);
+  transition: opacity 0.25s linear;
+  overflow: hidden;
+}
+.u-frame[data-shut] .u-frame-cap { opacity: 0; }
 
 /*
  * On a touch screen there is no scroll-driven flick: the strip is swiped
@@ -124,15 +131,26 @@ body {
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
-    transform: none !important;
+    gap: 1rem;
   }
   .u-flick-track::-webkit-scrollbar { display: none; }
   .u-frame {
-    width: 78vw;
+    width: 78vw !important;
     scroll-snap-align: start;
-    opacity: 1;
-    filter: none;
   }
+  .u-frame > a > div { height: auto; }
+  .u-frame-cap { opacity: 1 !important; }
+}
+
+/* A banner of words, running edge to edge, between the two strips. */
+.u-marquee { overflow: hidden; }
+.u-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 48s linear infinite;
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
 }
 
 /* ------------------------------------------------------------------ */
@@ -191,5 +209,7 @@ body {
     transition: none !important;
   }
   [data-reveal="rule"] > i { transform: scaleX(1) !important; }
-  .u-frame { opacity: 1 !important; filter: none !important; }
+  .u-frame { width: 40vw !important; }
+  .u-frame-cap { opacity: 1 !important; }
+  .u-marquee-track { animation: none !important; }
 }

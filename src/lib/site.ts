@@ -97,22 +97,6 @@ export const weddings = [
     note: "Lit terraces after dark",
   },
   {
-    slug: "manor-hill-house",
-    title: "Manor Hill House",
-    venue: "Manor Hill House",
-    place: "",
-    img: "/img/w-manor-hill.jpg",
-    note: "An outdoor ceremony in the pavilion",
-  },
-  {
-    slug: "hotel-indigo",
-    title: "Hotel Indigo",
-    venue: "Hotel Indigo",
-    place: "Stratford-upon-Avon",
-    img: "/img/w-hotel-indigo.jpg",
-    note: "Getting ready in town",
-  },
-  {
     slug: "lord-leycester",
     title: "Lord Leycester",
     venue: "Lord Leycester Hospital and The Warwick Arms",
@@ -127,14 +111,6 @@ export const weddings = [
     place: "",
     img: "/img/w-mickleton.jpg",
     note: "A barn on the edge of the Cotswolds",
-  },
-  {
-    slug: "the-barn-at-upcote",
-    title: "The Barn at Upcote",
-    venue: "The Barn at Upcote",
-    place: "",
-    img: "/img/w-upcote.jpg",
-    note: "Cotswold stone and open fields",
   },
 ];
 
@@ -171,37 +147,62 @@ export const events = [
     note: "In the studio, at home, or out in the Warwickshire countryside",
   },
   {
-    slug: "portraits",
-    title: "Portraits",
-    img: "/img/e-portrait.jpg",
-    note: "Studio portraiture, one light and a lot of patience",
-  },
-  {
     slug: "pets",
     title: "Dogs and pets",
     img: "/img/e-dogs.jpg",
     note: "Including Winnie, who works here",
   },
-  {
-    slug: "cars",
-    title: "Cars",
-    img: "/img/e-cars.jpg",
-    note: "Classic, sports and show cars, in the studio or on location",
-  },
-  {
-    slug: "product",
-    title: "Product and packshot",
-    img: "/img/e-product.jpg",
-    note: "For menus, listings and websites",
-  },
 ];
 
-/** How other people have described him, from his own About page. */
-export const saidOfHim =
-  "Fun, friendly, relaxed, creative, thoughtful, like one of the guests, full of ideas, very organised, never stops.";
+/** How couples and guests describe him, drawn from his own About page. */
+export const words = [
+  "Fun",
+  "Friendly",
+  "Relaxed",
+  "Creative",
+  "Thoughtful",
+  "Full of ideas",
+  "Organised",
+  "Never stops",
+  "Like one of the guests",
+];
 
 export const intro =
   "I have photographed weddings around Stratford-upon-Avon since 2006, and nothing else full time since 2014. Manor houses, village churches, barns and back gardens, mostly across Warwickshire and the Cotswolds.";
+
+/**
+ * How he works, from the "why choose" and "my style" sections of his own
+ * site: traditional and documentary mixed, candids alongside the family
+ * groups and a few signature couple portraits, and a calm approach to the
+ * parts of a day that go wrong.
+ */
+export const approach = {
+  heading: "How I work",
+  lead:
+    "Traditional and documentary, mixed. Real people and real moments, alongside the portraits that actually end up framed.",
+  points: [
+    {
+      h: "Mostly out of the way",
+      p: "Most of a wedding is photographed as it happens, from the nervous bit before the ceremony through to whoever takes over the dance floor later. Warm, relaxed and largely unnoticed.",
+    },
+    {
+      h: "Then a little direction",
+      p: "Plenty of people are uneasy in front of a camera, which is normal. A few quiet pointers are usually all it takes for a portrait to look like the person in it rather than a pose.",
+    },
+    {
+      h: "The groups that matter",
+      p: "Family groups get done properly and quickly, because those are the frames that end up on walls. Twenty years in, the list takes minutes rather than half the afternoon.",
+    },
+    {
+      h: "And a few signature portraits",
+      p: "Somewhere in the day there is room for a handful of couple portraits worth printing large. Those are the ones I plan around.",
+    },
+    {
+      h: "Unflustered",
+      p: "Rain, a late car, a dark room with a low ceiling. These turn up at most weddings. The thing couples tend to mention afterwards is that nobody got stressed about any of it.",
+    },
+  ],
+};
 
 /** The About page, written from the facts on his own About page. */
 export const about = {
