@@ -71,86 +71,61 @@ body {
 }
 
 /* ---------------------------------------------------------------------
- * The flick-through. A tall section holds a sticky viewport, and the
- * frames inside narrow as the page scrolls so that the ones already seen
- * pile up against the left as a stack of edges. Written straight to the
- * elements from a rAF loop; React never sees a frame of it.
+ * The flick-through. Sideways scrolling moves through the photographs;
+ * scrolling down moves down the page. Nothing is pinned and no scroll is
+ * intercepted, so this is just an overflow container the browser drives.
+ * overscroll-behavior-x stops a swipe past the last frame from being read
+ * as a back gesture.
  * ------------------------------------------------------------------ */
-.u-flick { position: relative; }
-.u-flick-stage {
-  position: sticky;
-  top: 0;
-  height: 100svh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  overflow: hidden;
-}
 .u-flick-track {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: clamp(0.85rem, 1.6vw, 1.5rem);
   padding-inline: var(--gutter);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
-.u-frame {
-  --shut: 0;
-  position: relative;
-  flex: none;
-  width: 40vw;
-  will-change: width;
-}
-/* The picture keeps its shape while the frame narrows, so a folded frame
-   reads as the edge of a photograph rather than a squashed one. */
-.u-frame > a > div { height: 54vh; }
-.u-frame img { object-position: center; }
+.u-flick-track::-webkit-scrollbar { display: none; }
+.u-flick-track:focus-visible { outline: 1px solid var(--color-ink); outline-offset: 6px; }
 
-/* Captions belong to whichever frame is still open. */
-.u-frame-cap {
-  opacity: calc(1 - var(--shut) * 1.6);
-  transition: opacity 0.25s linear;
+.u-frame {
+  flex: none;
+  width: clamp(17rem, 34vw, 30rem);
+  scroll-snap-align: center;
+  opacity: 0.4;
+  filter: saturate(0.3);
+  transition:
+    opacity 0.6s var(--ease-long),
+    filter 0.6s var(--ease-long);
+}
+.u-frame[data-near] { opacity: 1; filter: none; }
+
+/* How far along the rail has travelled. */
+.u-flick-bar {
+  display: block;
+  height: 1px;
+  background: var(--color-line);
   overflow: hidden;
 }
-.u-frame[data-shut] .u-frame-cap { opacity: 0; }
+.u-flick-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--color-ink);
+  transform-origin: left;
+  transform: scaleX(0.04);
+}
 
-/*
- * On a touch screen there is no scroll-driven flick: the strip is swiped
- * by hand instead. The section drops its pinned height, the stage stops
- * being sticky, and the track becomes a snapping rail. Without this the
- * JS is off, the track never moves, and every frame after the first is
- * unreachable on a phone.
- */
+/* Nothing is dimmed where there is no pointer to aim with. */
 @media (hover: none) {
-  .u-flick { height: auto !important; }
-  .u-flick-stage {
-    position: static;
-    height: auto;
-    overflow: visible;
-    padding-block: 3.5rem;
-  }
-  .u-flick-track {
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    gap: 1rem;
-  }
-  .u-flick-track::-webkit-scrollbar { display: none; }
   .u-frame {
-    width: 78vw !important;
+    width: 78vw;
     scroll-snap-align: start;
+    opacity: 1;
+    filter: none;
   }
-  .u-frame > a > div { height: auto; }
-  .u-frame-cap { opacity: 1 !important; }
-}
-
-/* A banner of words, running edge to edge, between the two strips. */
-.u-marquee { overflow: hidden; }
-.u-marquee-track {
-  display: flex;
-  width: max-content;
-  animation: marquee 48s linear infinite;
-}
-@keyframes marquee {
-  to { transform: translateX(-50%); }
 }
 
 /* ------------------------------------------------------------------ */
@@ -209,7 +184,5 @@ body {
     transition: none !important;
   }
   [data-reveal="rule"] > i { transform: scaleX(1) !important; }
-  .u-frame { width: 40vw !important; }
-  .u-frame-cap { opacity: 1 !important; }
-  .u-marquee-track { animation: none !important; }
+  .u-frame { opacity: 1 !important; filter: none !important; }
 }

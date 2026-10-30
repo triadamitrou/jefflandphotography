@@ -12,22 +12,20 @@ export type Frame = {
   meta?: string;
 };
 
-/* Width of a frame at rest, and once it has been pushed aside, in vw. */
-const FULL = 40;
-const SLIVER = 2.2;
-/* How many frames stay open at the end rather than collapsing. */
-const KEEP = 1.7;
-
 /**
- * The filmstrip. Frames do not slide past the edge: as the page scrolls
- * each one narrows to a sliver and piles up against the left, so the ones
- * already seen stay on screen as a stack of edges while the next opens.
+ * The filmstrip. Sideways scrolling moves through the photographs;
+ * scrolling down moves down the page, as it would anywhere else.
  *
- * Nothing translates. The whole effect is the frames' own widths, which
- * means the stack pins itself to the left without any compensating offset.
- * Those widths are written to the nodes from a rAF loop rather than held
- * in state: at sixty frames a second React would re-render the strip and
- * the scroll would stutter.
+ * That separation is the whole design. Nothing is pinned and no scroll is
+ * intercepted, so the rail is a plain overflow container the browser
+ * drives: a trackpad swipe, shift and the wheel, a touch drag, or the
+ * arrow keys once it has focus all work without any help from us.
+ *
+ * The only scripting is cosmetic. A listener marks whichever frames are
+ * in front of the reader so the rest can sit back, and tracks how far
+ * along the rail has travelled for the progress rule. Both are written
+ * straight to the nodes, because at scroll frequency going through React
+ * would re-render the strip for no benefit.
  */
 export default function Flick({
   id,
@@ -44,100 +42,95 @@ export default function Flick({
      component, and a function cannot cross that boundary. */
   base: string;
 }) {
-  const outer = useRef<HTMLElement>(null);
   const track = useRef<HTMLDivElement>(null);
+  const bar = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    const section = outer.current;
     const strip = track.current;
-    if (!section || !strip) return;
+    if (!strip) return;
 
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const coarse = window.matchMedia("(hover: none)").matches;
-    if (reduced || coarse) return;
+    const dim = !window.matchMedia("(hover: none)").matches;
+    let queued = false;
 
-    const items = Array.from(strip.children) as HTMLElement[];
-    let raf = 0;
-    let visible = false;
-    const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting), {
-      rootMargin: "120px",
-    });
-    io.observe(section);
-
-    const tick = () => {
-      if (visible) {
-        const span = section.offsetHeight - window.innerHeight;
-        const past = -section.getBoundingClientRect().top;
-        const p = span > 0 ? Math.min(1, Math.max(0, past / span)) : 0;
-
-        // How far through the stack we are, counted in frames.
-        const shut = p * Math.max(1, items.length - KEEP);
-
-        for (let i = 0; i < items.length; i++) {
-          const el = items[i];
-          // 0 while open, 1 once fully folded away.
-          const t = Math.min(1, Math.max(0, shut - i));
-          const eased = t * t * (3 - 2 * t);
-          el.style.width = `${(FULL + (SLIVER - FULL) * eased).toFixed(3)}vw`;
-          el.style.setProperty("--shut", eased.toFixed(3));
-          if (eased > 0.6) el.setAttribute("data-shut", "");
-          else el.removeAttribute("data-shut");
-        }
+    const paint = () => {
+      queued = false;
+      const travel = strip.scrollWidth - strip.clientWidth;
+      if (bar.current) {
+        const p = travel > 0 ? strip.scrollLeft / travel : 0;
+        bar.current.style.transform = `scaleX(${Math.min(1, Math.max(0.04, p)).toFixed(3)})`;
       }
-      raf = requestAnimationFrame(tick);
+      if (!dim) return;
+      const box = strip.getBoundingClientRect();
+      for (const el of Array.from(strip.children) as HTMLElement[]) {
+        const r = el.getBoundingClientRect();
+        // Lit while any part of the frame is comfortably inside the rail.
+        const inside = r.left < box.right - 60 && r.right > box.left + 60;
+        if (inside) el.setAttribute("data-near", "");
+        else el.removeAttribute("data-near");
+      }
     };
-    raf = requestAnimationFrame(tick);
 
+    const onScroll = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(paint);
+    };
+
+    paint();
+    strip.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
     return () => {
-      cancelAnimationFrame(raf);
-      io.disconnect();
+      strip.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
     };
   }, []);
 
-  // Tall enough that each frame gets roughly three quarters of a screen.
-  const height = `calc(100svh + ${Math.max(1, frames.length) * 72}vh)`;
-
   return (
-    <section ref={outer} id={id} className="u-flick" style={{ height }}>
-      <div className="u-flick-stage">
-        <div className="u-wrap flex shrink-0 flex-wrap items-end justify-between gap-x-8 gap-y-2 pb-7">
-          <h2 className="u-display text-[2.6rem] sm:text-6xl lg:text-7xl">{heading}</h2>
-          <p className="u-label text-mute pb-2">{eyebrow}</p>
-        </div>
+    <section id={id} className="u-flick py-16 lg:py-24">
+      <div className="u-wrap flex flex-wrap items-end justify-between gap-x-8 gap-y-2 pb-7">
+        <h2 className="u-display text-[2.6rem] sm:text-6xl lg:text-7xl">{heading}</h2>
+        <p className="u-label text-mute pb-2">{eyebrow}</p>
+      </div>
 
-        <div ref={track} className="u-flick-track">
-          {frames.map((f, i) => (
-            <figure key={f.slug} className="u-frame">
-              <Link href={`${base}/${f.slug}`} className="group block">
-                <div className="bg-wall-2 relative aspect-[4/3] overflow-hidden">
-                  <Image
-                    src={f.img}
-                    alt={f.title}
-                    fill
-                    sizes="(max-width: 640px) 80vw, 40vw"
-                    className="object-cover transition-transform duration-[1.6s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
-                    priority={i < 2}
-                  />
-                </div>
-                <figcaption className="u-frame-cap mt-3.5">
-                  <span className="flex items-baseline justify-between gap-4">
-                    <span className="text-[1.0625rem] tracking-[-0.01em] whitespace-nowrap">
-                      {f.title}
-                    </span>
-                    <span className="u-label text-mute shrink-0">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                  </span>
-                  {(f.meta || f.note) && (
-                    <span className="text-mute mt-1 block text-sm whitespace-nowrap">
-                      {f.meta || f.note}
-                    </span>
-                  )}
-                </figcaption>
-              </Link>
-            </figure>
-          ))}
-        </div>
+      <div
+        ref={track}
+        className="u-flick-track"
+        tabIndex={0}
+        role="region"
+        aria-label={`${heading}, scroll sideways`}
+      >
+        {frames.map((f, i) => (
+          <figure key={f.slug} className="u-frame" data-near={i < 3 ? "" : undefined}>
+            <Link href={`${base}/${f.slug}`} className="group block">
+              <div className="bg-wall-2 relative aspect-[4/3] overflow-hidden">
+                <Image
+                  src={f.img}
+                  alt={f.title}
+                  fill
+                  sizes="(max-width: 640px) 80vw, 34vw"
+                  className="object-cover transition-transform duration-[1.6s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
+                  priority={i < 2}
+                />
+              </div>
+              <figcaption className="mt-3.5 flex items-baseline justify-between gap-4">
+                <span className="text-[1.0625rem] tracking-[-0.01em]">{f.title}</span>
+                <span className="u-label text-mute shrink-0">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </figcaption>
+              {(f.meta || f.note) && (
+                <p className="text-mute mt-1 text-sm">{f.meta || f.note}</p>
+              )}
+            </Link>
+          </figure>
+        ))}
+        <div className="w-[var(--gutter)] shrink-0" aria-hidden />
+      </div>
+
+      <div className="u-wrap pt-9">
+        <span className="u-flick-bar" aria-hidden>
+          <span ref={bar} />
+        </span>
       </div>
     </section>
   );

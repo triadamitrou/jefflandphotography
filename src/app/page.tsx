@@ -1,6 +1,5 @@
 import Hero from "@/components/sections/Hero";
 import Flick from "@/components/Flick";
-import Said from "@/components/sections/Said";
 import AboutTeaser from "@/components/sections/AboutTeaser";
 import { events, weddings } from "@/lib/site";
 
@@ -21,8 +20,6 @@ export default function Home() {
         }))}
         base="/weddings"
       />
-
-      <Said />
 
       <Flick
         id="events"

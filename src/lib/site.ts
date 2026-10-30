@@ -154,19 +154,6 @@ export const events = [
   },
 ];
 
-/** How couples and guests describe him, drawn from his own About page. */
-export const words = [
-  "Fun",
-  "Friendly",
-  "Relaxed",
-  "Creative",
-  "Thoughtful",
-  "Full of ideas",
-  "Organised",
-  "Never stops",
-  "Like one of the guests",
-];
-
 export const intro =
   "I have photographed weddings around Stratford-upon-Avon since 2006, and nothing else full time since 2014. Manor houses, village churches, barns and back gardens, mostly across Warwickshire and the Cotswolds.";
 
