@@ -45,14 +45,35 @@ export default function About() {
         >
           {approach.lead}
         </Reveal>
-        <div className="mt-12 grid gap-x-12 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
+        {/* These five run in the order a day does, so they are set as a
+            numbered sequence rather than a grid of equal blocks. The
+            numeral gives the eye somewhere to land, the headings line up
+            in one column to be read straight down on their own, and the
+            prose sits at full body weight instead of muted grey. */}
+        <ol className="mt-14 lg:mt-16">
           {approach.points.map((pt, i) => (
-            <Reveal key={pt.h} mode="rise" delay={120 + i * 70}>
-              <h3 className="text-[1.0625rem] tracking-[-0.01em]">{pt.h}</h3>
-              <p className="text-mute mt-2.5 text-[0.95rem] leading-relaxed">{pt.p}</p>
+            <Reveal
+              key={pt.h}
+              as="li"
+              mode="rise"
+              delay={120 + i * 70}
+              className="border-line grid gap-x-8 gap-y-2.5 border-t py-7 last:border-b sm:grid-cols-[3rem_1fr] lg:grid-cols-[4rem_17rem_1fr] lg:gap-x-12 lg:py-9"
+            >
+              <span
+                aria-hidden
+                className="u-display text-mute/55 text-[2.25rem] leading-none lg:text-[2.75rem]"
+              >
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <h3 className="u-display text-[1.6rem] leading-tight sm:text-[1.75rem]">
+                {pt.h}
+              </h3>
+              <p className="text-ink-2 max-w-prose leading-relaxed sm:col-start-2 lg:col-start-3 lg:row-start-1">
+                {pt.p}
+              </p>
             </Reveal>
           ))}
-        </div>
+        </ol>
       </section>
 
       <section className="u-wrap grid gap-12 pb-20 lg:grid-cols-[1fr_0.8fr] lg:gap-20">
