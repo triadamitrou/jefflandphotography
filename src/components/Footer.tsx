@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { nav, site } from "@/lib/site";
 
 export default function Footer() {
@@ -5,6 +6,13 @@ export default function Footer() {
     <footer className="border-line border-t">
       <div className="u-wrap grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:py-18">
         <div>
+          <Image
+            src="/img/jl-mark.png"
+            alt=""
+            width={496}
+            height={496}
+            className="mb-5 h-11 w-11"
+          />
           <p className="u-display text-2xl leading-none tracking-[-0.025em]">{site.full}</p>
           <p className="text-mute mt-3 text-sm">
             {site.role}

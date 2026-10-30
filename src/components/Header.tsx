@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { nav, site } from "@/lib/site";
@@ -26,8 +27,18 @@ export default function Header() {
       }`}
     >
       <div className="u-wrap flex h-16 items-center justify-between gap-6">
-        <Link href="/" className="u-display text-[1.35rem] leading-none tracking-[-0.025em]">
-          {site.name}
+        {/* His own monogram, the mark alone with the wordmark left off, cut
+            from the 512px icon on his site to a transparent circle so the
+            wall shows through instead of a white square. */}
+        <Link href="/" aria-label={`${site.full}, home`} className="shrink-0">
+          <Image
+            src="/img/jl-mark.png"
+            alt=""
+            width={496}
+            height={496}
+            priority
+            className="h-9 w-9 transition-opacity duration-400 hover:opacity-80"
+          />
         </Link>
 
         <nav className="flex items-center gap-5 sm:gap-7">
